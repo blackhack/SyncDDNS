@@ -14,7 +14,6 @@
 
 import logging
 import os
-import re
 import sys
 import time
 import yaml
@@ -23,16 +22,19 @@ import requests
 from nslookup import Nslookup
 
 from provider_url import ProviderUrl
-
+import utilities
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 logger_path = os.path.join(script_dir, "console.log")
 config_path = os.path.join(script_dir, "config.yaml")
+logger = None
+config_settings = None
 
 
 def initialize_logger():
     """Initialize and configure the logger."""
     # Create a logger object
+    global logger
     logger = logging.getLogger("SyncDDNS")
     logger.setLevel(logging.INFO)
 
@@ -50,11 +52,6 @@ def initialize_logger():
     # Add the handlers to the logger
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
-
-    return logger
-
-
-logger = initialize_logger()
 
 
 def load_config():
@@ -83,17 +80,15 @@ def load_config():
                 domains_list["provider"], domains["details"]
             )
 
-    # Return the settings as a dictionary
-    return {
+    # Set the settings as a dictionary
+    global config_settings
+    config_settings = {
         "update_delay": update_delay,
         "dns_servers": dns_servers,
         "ipv4_servers": ipv4_servers,
         "ipv6_servers": ipv6_servers,
         "domains_dict": domains_dict,
     }
-
-
-config_settings = load_config()
 
 
 def get_current_IP(ipv6: bool = False):
@@ -166,47 +161,9 @@ def get_current_dns_IPs(domain: str, ipv4: bool = True, ipv6: bool = True):
     }
 
 
-def CheckIPValidity(ip):
-    if not ip or not isinstance(ip, str):
-        return None
-
-    ipv4_pattern = re.compile(
-        r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}"
-        r"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
-    )
-
-    ipv6_pattern = re.compile(
-        r"^((?:[0-9A-Fa-f]{1,4}:){7}(?:[0-9A-Fa-f]{1,4}|:)|"
-        r"(?:[0-9A-Fa-f]{1,4}:){6}(?::[0-9A-Fa-f]{1,4}|"
-        r"(?:[0-9A-Fa-f]{1,4}:)?:(?:[0-9A-Fa-f]{1,4}:)?"
-        r"[0-9A-Fa-f]{1,4}|:)|"
-        r"(?:[0-9A-Fa-f]{1,4}:){5}(?:(?::[0-9A-Fa-f]{1,4}){1,2}|:"
-        r"(?:[0-9A-Fa-f]{1,4}:){1,2}:[0-9A-Fa-f]{1,4}|:)|"
-        r"(?:[0-9A-Fa-f]{1,4}:){4}(?:(?::[0-9A-Fa-f]{1,4}){1,3}|:"
-        r"(?:[0-9A-Fa-f]{1,4}:){1,3}:[0-9A-Fa-f]{1,4}|:)|"
-        r"(?:[0-9A-Fa-f]{1,4}:){3}(?:(?::[0-9A-Fa-f]{1,4}){1,4}|:"
-        r"(?:[0-9A-Fa-f]{1,4}:){1,4}:[0-9A-Fa-f]{1,4}|:)|"
-        r"(?:[0-9A-Fa-f]{1,4}:){2}(?:(?::[0-9A-Fa-f]{1,4}){1,5}|:"
-        r"(?:[0-9A-Fa-f]{1,4}:){1,5}:[0-9A-Fa-f]{1,4}|:)|"
-        r"(?:[0-9A-Fa-f]{1,4}:){1}(?:(?::[0-9A-Fa-f]{1,4}){1,6}|:"
-        r"(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|:)|"
-        r"(?::((?::[0-9A-Fa-f]{1,4}){1,7}|:))"
-        r")(?:%[0-9a-zA-Z]{1,})?$"
-    )
-
-    if ipv4_pattern.match(ip):
-        return ip
-    elif ipv6_pattern.match(ip):
-        return ip
-    else:
-        return None
-
-
-while True:
-    logger.info("Starting IPs checking loop...")
-
-    current_ipv4 = CheckIPValidity(get_current_IP())
-    current_ipv6 = CheckIPValidity(get_current_IP(ipv6=True))
+def run_ip_check_cycle():
+    current_ipv4 = utilities.check_ip_validity(get_current_IP())
+    current_ipv6 = utilities.check_ip_validity(get_current_IP(ipv6=True))
 
     for token, domains_mgr in config_settings["domains_dict"].items():
         for domain in domains_mgr.domains:
@@ -222,9 +179,9 @@ while True:
             request_urls = domains_mgr.get_update_url(
                 token,
                 domain["name"],
-                CheckIPValidity(old_ips["ipv4"]),
+                utilities.check_ip_validity(old_ips["ipv4"]),
                 current_ipv4 if ipv4 else None,
-                CheckIPValidity(old_ips["ipv6"]),
+                utilities.check_ip_validity(old_ips["ipv6"]),
                 current_ipv6 if ipv6 else None,
             )
 
@@ -243,5 +200,22 @@ while True:
                             )
                             logger.error(e.strerror)
 
-    logger.info(f"Sleeping for {config_settings['update_delay']} seconds")
-    time.sleep(config_settings["update_delay"])
+
+def main():
+    initialize_logger()
+    load_config()
+
+    try:
+        while True:
+            logger.info("Starting IPs checking cycle...")
+            run_ip_check_cycle()
+            logger.info(f"Sleeping for {config_settings['update_delay']} seconds")
+            time.sleep(config_settings["update_delay"])
+    except KeyboardInterrupt:
+        logger.info("Program terminated by user.")
+    except Exception as e:
+        logger.error(f"An unhandled error occurred: {e}")
+
+
+if __name__ == "__main__":
+    main()

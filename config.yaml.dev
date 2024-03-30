@@ -1,9 +1,10 @@
 GENERAL:
-  update_delay: 180
+  update_delay: 180 # Seconds between checks, remember to respect the server's rate limit.
   dns_servers:
     - 1.1.1.1
     - 1.0.0.1
 
+# Servers to check the host public IPs; they need to return just the IP in plain text.
   ipv4_servers:
     - https://ipv4.icanhazip.com/
     - https://ipinfo.io/ip
@@ -15,6 +16,7 @@ GENERAL:
     - https://ipv6.wtfismyip.com/text
     - https://api6.ipify.org/
 
+# List of domains to check and update.
 DOMAINS_LIST:
   - provider: DUCKDNS
     domains:

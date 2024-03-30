@@ -13,6 +13,7 @@
 #    limitations under the License.
 
 import logging
+import os
 import re
 import sys
 import time
@@ -24,6 +25,11 @@ from nslookup import Nslookup
 from provider_url import ProviderUrl
 
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+logger_path = os.path.join(script_dir, "console.log")
+config_path = os.path.join(script_dir, "config.yaml")
+
+
 def initialize_logger():
     """Initialize and configure the logger."""
     # Create a logger object
@@ -31,7 +37,7 @@ def initialize_logger():
     logger.setLevel(logging.INFO)
 
     # Create handlers for writing to file and printing to console
-    file_handler = logging.FileHandler("console.log", "w")
+    file_handler = logging.FileHandler(logger_path, "w")
     console_handler = logging.StreamHandler()
 
     # Create a formatter and set it for both handlers
@@ -55,7 +61,7 @@ def load_config():
     """Load the configuration from the config.ini file."""
 
     try:
-        with open("config.yaml", "r") as file:
+        with open(config_path, "r") as file:
             config = yaml.safe_load(file)
     except FileNotFoundError:
         logger.error(

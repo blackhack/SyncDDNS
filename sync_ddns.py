@@ -12,13 +12,15 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-
-import time
-import requests
-from nslookup import Nslookup
-import yaml
 import logging
 import re
+import sys
+import time
+import yaml
+
+import requests
+from nslookup import Nslookup
+
 from provider_url import ProviderUrl
 
 
@@ -46,11 +48,21 @@ def initialize_logger():
     return logger
 
 
+logger = initialize_logger()
+
+
 def load_config():
     """Load the configuration from the config.ini file."""
 
-    with open("config.yaml", "r") as file:
-        config = yaml.safe_load(file)
+    try:
+        with open("config.yaml", "r") as file:
+            config = yaml.safe_load(file)
+    except FileNotFoundError:
+        logger.error(
+            "'config.yaml' not found. Please copy 'config.yaml.dev', "
+            "rename it to 'config.yaml', and then edit it with your own settings."
+        )
+        sys.exit(1)
 
     update_delay = config["GENERAL"]["update_delay"]
     dns_servers = config["GENERAL"]["dns_servers"]
@@ -75,7 +87,6 @@ def load_config():
     }
 
 
-logger = initialize_logger()
 config_settings = load_config()
 
 

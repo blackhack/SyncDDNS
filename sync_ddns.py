@@ -111,12 +111,14 @@ def get_current_IP(ipv6: bool = False):
                 return request_result.text.rstrip()
         except requests.exceptions.RequestException as e:
             logger.error(
-                f"Can't get current {'IPv6' if ipv6 else 'IPv4'} using the server {url}, check the status of the server or your internet connection!"
+                f"Can't get current {'IPv6' if ipv6 else 'IPv4'} using the server {url}, "
+                "check the status of the server or your internet connection!"
             )
 
     if request_result is None or request_result.status_code != 200:
         logger.warning(
-            f"Not valid results from get_current_IP({'IPv6' if ipv6 else 'IPv4'}), check if {'IPV6' if ipv6 else 'IPV4'}_GETTER servers are working as intended."
+            f"Not valid results from get_current_IP({'IPv6' if ipv6 else 'IPv4'}), "
+            f"check if {'IPV6' if ipv6 else 'IPV4'}_GETTER servers are working as intended."
         )
 
         return None
@@ -169,10 +171,27 @@ def CheckIPValidity(ip):
         return None
 
     ipv4_pattern = re.compile(
-        r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+        r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}"
+        r"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
     )
+
     ipv6_pattern = re.compile(
-        r"^((?:[0-9A-Fa-f]{1,4}:){7}(?:[0-9A-Fa-f]{1,4}|:)|(?:[0-9A-Fa-f]{1,4}:){6}(?::[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:)?:(?:[0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4}|:)|(?:[0-9A-Fa-f]{1,4}:){5}(?:(?::[0-9A-Fa-f]{1,4}){1,2}|:(?:[0-9A-Fa-f]{1,4}:){1,2}:[0-9A-Fa-f]{1,4}|:)|(?:[0-9A-Fa-f]{1,4}:){4}(?:(?::[0-9A-Fa-f]{1,4}){1,3}|:(?:[0-9A-Fa-f]{1,4}:){1,3}:[0-9A-Fa-f]{1,4}|:)|(?:[0-9A-Fa-f]{1,4}:){3}(?:(?::[0-9A-Fa-f]{1,4}){1,4}|:(?:[0-9A-Fa-f]{1,4}:){1,4}:[0-9A-Fa-f]{1,4}|:)|(?:[0-9A-Fa-f]{1,4}:){2}(?:(?::[0-9A-Fa-f]{1,4}){1,5}|:(?:[0-9A-Fa-f]{1,4}:){1,5}:[0-9A-Fa-f]{1,4}|:)|(?:[0-9A-Fa-f]{1,4}:){1}(?:(?::[0-9A-Fa-f]{1,4}){1,6}|:(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|:)|(?::((?::[0-9A-Fa-f]{1,4}){1,7}|:)))(?:%[0-9a-zA-Z]{1,})?$"
+        r"^((?:[0-9A-Fa-f]{1,4}:){7}(?:[0-9A-Fa-f]{1,4}|:)|"
+        r"(?:[0-9A-Fa-f]{1,4}:){6}(?::[0-9A-Fa-f]{1,4}|"
+        r"(?:[0-9A-Fa-f]{1,4}:)?:(?:[0-9A-Fa-f]{1,4}:)?"
+        r"[0-9A-Fa-f]{1,4}|:)|"
+        r"(?:[0-9A-Fa-f]{1,4}:){5}(?:(?::[0-9A-Fa-f]{1,4}){1,2}|:"
+        r"(?:[0-9A-Fa-f]{1,4}:){1,2}:[0-9A-Fa-f]{1,4}|:)|"
+        r"(?:[0-9A-Fa-f]{1,4}:){4}(?:(?::[0-9A-Fa-f]{1,4}){1,3}|:"
+        r"(?:[0-9A-Fa-f]{1,4}:){1,3}:[0-9A-Fa-f]{1,4}|:)|"
+        r"(?:[0-9A-Fa-f]{1,4}:){3}(?:(?::[0-9A-Fa-f]{1,4}){1,4}|:"
+        r"(?:[0-9A-Fa-f]{1,4}:){1,4}:[0-9A-Fa-f]{1,4}|:)|"
+        r"(?:[0-9A-Fa-f]{1,4}:){2}(?:(?::[0-9A-Fa-f]{1,4}){1,5}|:"
+        r"(?:[0-9A-Fa-f]{1,4}:){1,5}:[0-9A-Fa-f]{1,4}|:)|"
+        r"(?:[0-9A-Fa-f]{1,4}:){1}(?:(?::[0-9A-Fa-f]{1,4}){1,6}|:"
+        r"(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|:)|"
+        r"(?::((?::[0-9A-Fa-f]{1,4}){1,7}|:))"
+        r")(?:%[0-9a-zA-Z]{1,})?$"
     )
 
     if ipv4_pattern.match(ip):

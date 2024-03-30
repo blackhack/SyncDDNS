@@ -1,0 +1,43 @@
+GENERAL:
+  update_delay: 180
+  dns_servers:
+    - 1.1.1.1
+    - 1.0.0.1
+
+  ipv4_servers:
+    - https://ipv4.icanhazip.com/
+    - https://ipinfo.io/ip
+    - https://ipv4.wtfismyip.com/text
+    - https://api.ipify.org
+    
+  ipv6_servers:
+    - https://ipv6.icanhazip.com/
+    - https://ipv6.wtfismyip.com/text
+    - https://api6.ipify.org/
+
+DOMAINS_LIST:
+  - provider: DUCKDNS
+    domains:
+      - token: 123e4567-e89b-12d3-a456-exampletoken
+        details:
+          - name: example.duckdns.org
+          - name: example2.duckdns.org
+      
+  - provider: FREEDNS
+    domains:    
+      - token: aBcDeFgHiJkLmNoPqRsTuVwXyZ012345exampletoken1
+        details:
+          - name: example1.us.to
+            ipv4_only: true
+      - token: aBcDeFgHiJkLmNoPqRsTuVwXyZ012345exampletoken2
+        details:
+          - name: example1.us.to
+            ipv6_only: true
+      - token: aBcDeFgHiJkLmNoPqRsTuVwXyZ012345exampletoken3
+        details:
+          - name: example2.my.to
+            ipv4_only: true
+      - token: aBcDeFgHiJkLmNoPqRsTuVwXyZ012345exampletoken4
+        details:
+          - name: example2.my.to
+            ipv6_only: true

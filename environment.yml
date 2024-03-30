@@ -1,0 +1,11 @@
+name: SyncDDNS
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - requests
+  - pyyaml
+  - pip
+  - pip:
+    - nslookup
+  

@@ -93,7 +93,7 @@ def run_ip_check_cycle():
                 f"...... {'HIDE' if config_settings['hide_update_queries_on_logs'] else query}"
             )
 
-            if NetworkMgr.request_ip_update(query):
+            if NetworkMgr().request_ip_update(query):
                 logger.info("Update request accepted successfully!")
             else:
                 logger.info("Update request failed, trying on next loop...")

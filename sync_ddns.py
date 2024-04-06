@@ -12,46 +12,21 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import logging
 import os
 import sys
 import time
+
 import yaml
 
-import requests
-from nslookup import Nslookup
+import logger_mgr
+from domain_mgr import DomainMgr
+from network_mgr import NetworkMgr
 
-from provider_url import ProviderUrl
-import utilities
+logger = logger_mgr.initialize_logger("sync_ddns")
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-logger_path = os.path.join(script_dir, "console.log")
 config_path = os.path.join(script_dir, "config.yaml")
-logger = None
 config_settings = None
-
-
-def initialize_logger():
-    """Initialize and configure the logger."""
-    # Create a logger object
-    global logger
-    logger = logging.getLogger("SyncDDNS")
-    logger.setLevel(logging.INFO)
-
-    # Create handlers for writing to file and printing to console
-    file_handler = logging.FileHandler(logger_path, "w")
-    console_handler = logging.StreamHandler()
-
-    # Create a formatter and set it for both handlers
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-    file_handler.setFormatter(formatter)
-    console_handler.setFormatter(formatter)
-
-    # Add the handlers to the logger
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
 
 
 def load_config():
@@ -68,141 +43,63 @@ def load_config():
         sys.exit(1)
 
     update_delay = config["GENERAL"]["update_delay"]
+    hide_update_queries_on_logs = config["GENERAL"]["hide_update_queries_on_logs"]
+    logger_mgr.set_log_level(config["GENERAL"]["log_level"])
     dns_servers = config["GENERAL"]["dns_servers"]
     ipv4_servers = config["GENERAL"]["ipv4_servers"]
     ipv6_servers = config["GENERAL"]["ipv6_servers"]
 
-    domains_dict = {}
+    NetworkMgr(dns_servers, ipv4_servers, ipv6_servers)
 
-    for domains_list in config["DOMAINS_LIST"]:
-        for domains in domains_list["domains"]:
-            domains_dict[domains["token"]] = ProviderUrl(
-                domains_list["provider"], domains["details"]
-            )
+    domain_handlers = []
+
+    for domains_info in config["DOMAIN_INFO"]:
+        for domain_list in domains_info["domain_list"]:
+            provider = domains_info["provider"]
+            domain_data = domain_list["domain_data"]
+
+            domain_handlers.append(DomainMgr(provider, domain_data))
 
     # Set the settings as a dictionary
     global config_settings
     config_settings = {
         "update_delay": update_delay,
+        "hide_update_queries_on_logs": hide_update_queries_on_logs,
         "dns_servers": dns_servers,
         "ipv4_servers": ipv4_servers,
         "ipv6_servers": ipv6_servers,
-        "domains_dict": domains_dict,
-    }
-
-
-def get_current_IP(ipv6: bool = False):
-    """Try to return the current host's ip."""
-
-    request_result = None
-    getters_url = (
-        config_settings["ipv6_servers"] if ipv6 else config_settings["ipv4_servers"]
-    )
-
-    for url in getters_url:
-        try:
-            request_result = requests.get(url, timeout=5)
-            if request_result.status_code == 200:
-                return request_result.text.rstrip()
-        except requests.exceptions.RequestException as e:
-            logger.error(
-                f"Can't get current {'IPv6' if ipv6 else 'IPv4'} using the server {url}, "
-                "check the status of the server or your internet connection!"
-            )
-
-    if request_result is None or request_result.status_code != 200:
-        logger.warning(
-            f"Not valid results from get_current_IP({'IPv6' if ipv6 else 'IPv4'}), "
-            f"check if {'IPV6' if ipv6 else 'IPV4'}_GETTER servers are working as intended."
-        )
-
-        return None
-
-
-def get_current_dns_IPs(domain: str, ipv4: bool = True, ipv6: bool = True):
-    """Try to return the current domain A and AAAA records."""
-    dns_query = Nslookup(dns_servers=config_settings["dns_servers"])
-    ipv4_result = None
-    ipv6_result = None
-
-    if ipv4:
-        try:
-            ipv4_result = dns_query.dns_lookup(domain).answer
-
-            if len(ipv4_result) == 0:
-                ipv4_result = None
-                logger.warning(f"Obtained no A record for domain: {domain}")
-            else:
-                ipv4_result = ipv4_result[0]
-        except Exception as e:
-            ipv4_result = None
-            logger.error(
-                f"An error occurred while requesting domain A record: {domain}"
-            )
-
-    if ipv6:
-        try:
-            ipv6_result = dns_query.dns_lookup6(domain).answer
-
-            if len(ipv6_result) == 0:
-                ipv6_result = None
-                logger.warning(f"Obtained no AAAA record for domain: {domain}")
-            else:
-                ipv6_result = ipv6_result[0]
-        except Exception as e:
-            ipv6_result = None
-            logger.error(
-                f"An error occurred while requesting domain AAAA record: {domain}"
-            )
-
-    return {
-        "ipv4": ipv4_result,
-        "ipv6": ipv6_result,
+        "domain_handlers": domain_handlers,
     }
 
 
 def run_ip_check_cycle():
-    current_ipv4 = utilities.check_ip_validity(get_current_IP())
-    current_ipv6 = utilities.check_ip_validity(get_current_IP(ipv6=True))
+    current_ipv4 = NetworkMgr().get_current_IP()
+    current_ipv6 = NetworkMgr().get_current_IP(ipv6=True)
 
-    for token, domains_mgr in config_settings["domains_dict"].items():
-        for domain in domains_mgr.domains:
-            ipv4 = False if "ipv6_only" in domain else True
-            ipv6 = False if "ipv4_only" in domain else True
+    for domain_handler in config_settings["domain_handlers"]:
+        logger.info(
+            f"Checking IP changes for {domain_handler.provider} - {domain_handler.domains}"
+        )
 
-            ip_type = "IPv4 and IPv6" if ipv4 and ipv6 else ("IPv4" if ipv4 else "IPv6")
+        request_queries = domain_handler.get_update_url(current_ipv4, current_ipv6)
+        if not request_queries:
+            logger.info("... No updates were performed.")
+
+        for query in request_queries:
             logger.info(
-                f"Checking {ip_type} changes for {domains_mgr.provider} domain: {domain['name']}"
+                f"... An update will be performed with the following URL query:"
             )
-            old_ips = get_current_dns_IPs(domain["name"], ipv4, ipv6)
-
-            request_urls = domains_mgr.get_update_url(
-                token,
-                domain["name"],
-                utilities.check_ip_validity(old_ips["ipv4"]),
-                current_ipv4 if ipv4 else None,
-                utilities.check_ip_validity(old_ips["ipv6"]),
-                current_ipv6 if ipv6 else None,
+            logger.info(
+                f"...... {'HIDE' if config_settings['hide_update_queries_on_logs'] else query}"
             )
 
-            if all(element is None for element in request_urls):
-                logger.info(f"Skipping all updates for domain: {domain['name']}")
+            if NetworkMgr.request_ip_update(query):
+                logger.info("Update request accepted successfully!")
             else:
-                for url in request_urls:
-                    if url:
-                        logger.info(f"Requesting update: {url}")
-                        try:
-                            result_update = requests.get(url, timeout=5)
-                            logger.info(f"Server response: {result_update}")
-                        except requests.exceptions.RequestException as e:
-                            logger.error(
-                                "Result: Error while requesting IP update, retrying in the next loop."
-                            )
-                            logger.error(e.strerror)
+                logger.info("Update request failed, trying on next loop...")
 
 
 def main():
-    initialize_logger()
     load_config()
 
     try:
@@ -214,7 +111,7 @@ def main():
     except KeyboardInterrupt:
         logger.info("Program terminated by user.")
     except Exception as e:
-        logger.error(f"An unhandled error occurred: {e}")
+        logger.exception(f"A fatal error occurred: {e}")
 
 
 if __name__ == "__main__":

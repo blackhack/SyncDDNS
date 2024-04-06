@@ -1,5 +1,7 @@
 GENERAL:
-  update_delay: 180 # Seconds between checks, remember to respect the server's rate limit.
+  update_delay: 300 # Seconds between checks, remember to respect the server's rate limit.
+  hide_update_queries_on_logs: False
+  log_level: INFO
   dns_servers:
     - 1.1.1.1
     - 1.0.0.1
@@ -15,31 +17,26 @@ GENERAL:
     - https://ipv6.icanhazip.com/
     - https://ipv6.wtfismyip.com/text
     - https://api6.ipify.org/
-
+    
 # List of domains to check and update.
-DOMAINS_LIST:
-  - provider: DUCKDNS
-    domains:
-      - token: 123e4567-e89b-12d3-a456-exampletoken
-        details:
-          - name: example.duckdns.org
-          - name: example2.duckdns.org
-      
-  - provider: FREEDNS
-    domains:    
-      - token: aBcDeFgHiJkLmNoPqRsTuVwXyZ012345exampletoken1
-        details:
-          - name: example1.us.to
-            ipv4_only: true
-      - token: aBcDeFgHiJkLmNoPqRsTuVwXyZ012345exampletoken2
-        details:
-          - name: example1.us.to
-            ipv6_only: true
-      - token: aBcDeFgHiJkLmNoPqRsTuVwXyZ012345exampletoken3
-        details:
-          - name: example2.my.to
-            ipv4_only: true
-      - token: aBcDeFgHiJkLmNoPqRsTuVwXyZ012345exampletoken4
-        details:
-          - name: example2.my.to
-            ipv6_only: true
+# Supported providers: DUCKDNS, FREEDNS
+DOMAIN_INFO:
+  - provider: YOUR_DDNS_PROVIDER
+    domain_list:
+      - domain_data:
+          token: YOUR_UNIQUE_TOKEN
+          names:
+            - yourdomain1.example.com
+            - yourdomain2.example.com
+
+  - provider: ANOTHER_DDNS_PROVIDER
+    domain_list:
+      - domain_data:
+          token: ANOTHER_UNIQUE_TOKEN
+          ip_version: ipv4 # or ipv6 or both (not setting it means both)
+          names:
+            - anotherdomain1.example.org
+      - domain_data:
+          token: ANOTHER_UNIQUE_TOKEN_2
+          names:
+            - anotherdomain2.example.org

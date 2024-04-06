@@ -18,12 +18,48 @@ Or just using pip:
 pip install requests pyyaml nslookup
 ```
 
-Run just by using:
+Run it by using:
 ```
 python sync_ddns.py
 ```
 
 Tested on Python 3.11
+
+# Config parameters
+
+- **`update_delay`**: Defines how many seconds to wait between each check for domain checks. It's important to set this value in accordance with the DDNS provider's rate limit.
+
+- **`hide_update_queries_on_logs`**: A boolean value that determines whether update queries should be hidden in the logs. This is useful to hide tokens or other sensitive information out of the console and file logs.
+
+- **`log_level`**: Sets the verbosity of the logs.
+  - *Valid Values*:
+    - `DEBUG`
+    - `INFO` 
+
+- **`dns_servers`**: Specifies the DNS servers to be used by nslookup to check the current domain's IPs.
+
+- **`ipv4_servers:`**: List of servers that return the host's current IPv4 in plain text format, without any extra headers.
+
+- **`ipv6_servers`**: List of servers that return the host's current IPv6 in plain text format, without any extra headers.
+
+- **`provider`**: The DDNS service provider for the domain update.
+  - *Supported Values*:
+    - `DUCKDNS`
+    - `FREEDNS`
+
+- **`token`**: A unique authentication token string provided by the DDNS service.
+
+- **`domain_list`**: A list of domains to be updated.
+
+- **`domain_data`**: The specific data for a domain. An object containing the token, IP version, and names for a particular domain.
+
+- **`ip_version`**: Specifies the IP version for the domain. This parameter is optional.
+  - *Valid Values*:
+    - `ipv4`: Use this value if the domain only uses IPv4.
+    - `ipv6`: Use this value if the domain only uses IPv6.
+    - `both`: Use this value or omit the parameter if the domain will use both IPv4 and IPv6.
+
+- **`names`**: An array of strings, each representing a fully qualified domain name to be updated.
 
 ## License
 This project is licensed under the Apache License 2.0 - see the LICENSE file for details.

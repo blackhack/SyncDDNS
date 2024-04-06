@@ -34,13 +34,13 @@ class DomainMgr:
 
         match provider:
             case "DUCKDNS":
-                self.get_update_url = self.get_duckdns_update_url
+                self.get_update_query = self.get_duckdns_update_query
             case "FREEDNS":
-                self.get_update_url = self.get_freedns_update_url
+                self.get_update_query = self.get_freedns_update_query
             case _:
-                self.get_update_url = self.get_unhandled_update_url
+                self.get_update_query = self.get_unhandled_update_query
 
-    def get_duckdns_update_url(
+    def get_duckdns_update_query(
         self,
         new_ipv4: str = None,
         new_ipv6: str = None,
@@ -74,7 +74,7 @@ class DomainMgr:
 
         return []
 
-    def get_freedns_update_url(
+    def get_freedns_update_query(
         self,
         new_ipv4: str = None,
         new_ipv6: str = None,
@@ -116,7 +116,7 @@ class DomainMgr:
 
         return []
 
-    def get_unhandled_update_url(
+    def get_unhandled_update_query(
         self,
         new_ipv4: str = None,
         new_ipv6: str = None,

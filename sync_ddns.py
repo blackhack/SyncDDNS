@@ -86,7 +86,7 @@ def run_ip_check_cycle():
             f"Checking {ip_type} changes for {domain_handler.provider} - {domain_handler.domains}"
         )
 
-        request_queries = domain_handler.get_update_url(current_ipv4, current_ipv6)
+        request_queries = domain_handler.get_update_query(current_ipv4, current_ipv6)
         if not request_queries:
             logger.info("... No updates were performed.")
 

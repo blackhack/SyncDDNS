@@ -138,7 +138,7 @@ class DomainMgr:
 
         if need_update:
             # NO-IP allow to update multiple domains in a single query
-            request_url = f"http://{self.username}:{self.password}@dynupdate.no-ip.com/nic/update?hostname="
+            request_url = f"https://{self.username}:{self.password}@dynupdate.no-ip.com/nic/update?hostname="
             request_url += ",".join(self.domains)
             request_url += "&myip="
 

@@ -19,24 +19,32 @@ GENERAL:
     - https://api6.ipify.org/
     
 # List of domains to check and update.
-# Supported providers: DUCKDNS, FREEDNS
+# Supported providers: DUCKDNS, FREEDNS, NOIP
 DOMAIN_INFO:
-  - provider: YOUR_DDNS_PROVIDER
+  - provider: DUCKDNS
     domain_list:
       - domain_data:
           token: YOUR_UNIQUE_TOKEN
           names:
-            - yourdomain1.example.com
-            - yourdomain2.example.com
+            - yourdomain1.duckdns.org
+            - yourdomain2.duckdns.org
 
-  - provider: ANOTHER_DDNS_PROVIDER
+  - provider: FREEDNS
     domain_list:
       - domain_data:
           token: ANOTHER_UNIQUE_TOKEN
           ip_version: ipv4 # or ipv6 or both (not setting it means both)
           names:
-            - anotherdomain1.example.org
+            - anotherdomain1.freedns.org
       - domain_data:
           token: ANOTHER_UNIQUE_TOKEN_2
           names:
-            - anotherdomain2.example.org
+            - anotherdomain2.freedns.org
+
+  - provider: NOIP
+    domain_list:
+      - domain_data:
+          username: myuser@something.com
+          password: mypassword
+          names:
+            - yetanotherdomain.noip.org

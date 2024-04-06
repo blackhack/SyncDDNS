@@ -4,6 +4,7 @@ SyncDDNS is a Python script that helps keep your dynamic DNS A (IPv4) and AAAA (
 # Supported DDNS providers
 - [DuckDNS](https://www.duckdns.org)
 - [FreeDNS](https://freedns.afraid.org)
+- [No-IP](https://www.noip.com)
 
 ## Setting Up the Environment
 
@@ -46,8 +47,13 @@ Tested on Python 3.11
   - *Supported Values*:
     - `DUCKDNS`
     - `FREEDNS`
+    - `NOIP`
 
-- **`token`**: A unique authentication token string provided by the DDNS service.
+- **`token`**: A unique authentication token string provided by the DDNS service. If the DDNS provider issues a token, then the use of username and password is not necessary for authentication.
+
+- **`username`**: The user’s account identifier used for login purposes.
+
+- **`password`**: The secret key associated with the username for account access.
 
 - **`domain_list`**: A list of domains to be updated.
 

@@ -77,8 +77,13 @@ def run_ip_check_cycle():
     current_ipv6 = NetworkMgr().get_current_IP(ipv6=True)
 
     for domain_handler in config_settings["domain_handlers"]:
+        ip_type = (
+            "IPv4 and IPv6"
+            if domain_handler.update_ipv4 and domain_handler.update_ipv6
+            else ("IPv4" if domain_handler.update_ipv4 else "IPv6")
+        )
         logger.info(
-            f"Checking IP changes for {domain_handler.provider} - {domain_handler.domains}"
+            f"Checking {ip_type} changes for {domain_handler.provider} - {domain_handler.domains}"
         )
 
         request_queries = domain_handler.get_update_url(current_ipv4, current_ipv6)

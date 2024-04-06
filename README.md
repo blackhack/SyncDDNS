@@ -27,7 +27,7 @@ Tested on Python 3.11
 
 # Config parameters
 
-- **`update_delay`**: Defines how many seconds to wait between each check for domain checks. It's important to set this value in accordance with the DDNS provider's rate limit.
+- **`update_delay`**: Defines the number of seconds to wait between each check for IP changes. If changes are detected, the script will update the domain records accordingly. It’s important to set this value in accordance with the DDNS provider’s rate limit.
 
 - **`hide_update_queries_on_logs`**: A boolean value that determines whether update queries should be hidden in the logs. This is useful to hide tokens or other sensitive information out of the console and file logs.
 

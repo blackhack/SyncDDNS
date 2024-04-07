@@ -12,6 +12,9 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import re
+import sys
+
 import logger_mgr
 from network_mgr import NetworkMgr
 
@@ -34,13 +37,35 @@ class DomainMgr:
 
         match provider:
             case "DUCKDNS":
+                self.check_duckdns_config()
+                self.handle_response = self.handle_duckdns_query_response
                 self.get_update_query = self.get_duckdns_update_query
             case "FREEDNS":
+                self.check_freedns_config()
+                self.handle_response = self.handle_freedns_query_response
                 self.get_update_query = self.get_freedns_update_query
             case "NOIP":
+                self.check_noip_config()
+                self.handle_response = self.handle_noip_query_response
                 self.get_update_query = self.get_noip_update_query
             case _:
-                self.get_update_query = self.get_unhandled_update_query
+                logger.error(f"Invalid provider - {provider}")
+                sys.exit(1)
+
+    #### DuckDNS ####
+
+    def check_duckdns_config(self):
+        if not self.token or not self.domains:
+            logger.error("Invalid DuckDNS settings!")
+            sys.exit(1)
+
+    def handle_duckdns_query_response(self, response: str):
+        if response == "OK":
+            return "OK"
+        elif response == "KO":
+            return "CANCEL"
+
+        return "CONTINUE"
 
     def get_duckdns_update_query(
         self,
@@ -75,6 +100,24 @@ class DomainMgr:
             return [request_url]
 
         return []
+
+    #### FreeDNS ####
+
+    def check_freedns_config(self):
+        if not self.token or not self.domains:
+            logger.error("Invalid FreeDNS settings!")
+            sys.exit(1)
+
+    def handle_freedns_query_response(self, response: str):
+        invalid_url = re.compile(r"^ERROR: Invalid update URL .*")
+        invalid_token_domain = re.compile(r"^ERROR: Unable to locate this record .*")
+
+        if not response:
+            return "CONTINUE"
+        elif invalid_url.match(response) or invalid_token_domain.match(response):
+            return "CANCEL"
+
+        return "OK"
 
     def get_freedns_update_query(
         self,
@@ -118,6 +161,24 @@ class DomainMgr:
 
         return []
 
+    #### No-IP ####
+
+    def check_noip_config(self):
+        if not self.username or not self.password or not self.domains:
+            logger.error("Invalid No-IP settings!")
+            sys.exit(1)
+
+    def handle_noip_query_response(self, response: str):
+        ok_response = re.compile(r"^good .*")
+        non_change_response = re.compile(r"^nochg .*")
+
+        if not response:
+            return "CONTINUE"
+        elif ok_response.match(response) or non_change_response.match(response):
+            return "OK"
+
+        return "CANCEL"
+    
     def get_noip_update_query(
         self,
         new_ipv4: str = None,
@@ -155,9 +216,3 @@ class DomainMgr:
 
         return []
 
-    def get_unhandled_update_query(
-        self,
-        new_ipv4: str = None,
-        new_ipv6: str = None,
-    ):
-        return []

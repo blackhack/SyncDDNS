@@ -104,16 +104,16 @@ class NetworkMgr:
     def request_ip_update(self, url_query: str):
         try:
             response = requests.get(url_query, timeout=5)
-            logger.debug(f"request_ip_update - Server response: {response.text}")
+            logger.debug(f"request_ip_update - Code: {response.status_code} - response: {response.text}")
         except requests.exceptions.RequestException as error:
             response = None
             logger.error(f"request_ip_update - Error while requesting IP update")
             logger.debug(f"Error: {error}")
 
         if response and response.status_code == 200:
-            return True
+            return response.text
 
-        return False
+        return ""
 
     def check_ip_validity(self, ip: str) -> str | None:
         """

@@ -76,7 +76,7 @@ def run_ip_check_cycle():
     current_ipv4 = NetworkMgr().get_current_IP()
     current_ipv6 = NetworkMgr().get_current_IP(ipv6=True)
 
-    for domain_handler in config_settings["domain_handlers"]:
+    for domain_handler in config_settings["domain_handlers"][:]:
         ip_type = (
             "IPv4 and IPv6"
             if domain_handler.update_ipv4 and domain_handler.update_ipv6
@@ -98,10 +98,24 @@ def run_ip_check_cycle():
                 f"...... {'HIDE' if config_settings['hide_update_queries_on_logs'] else query}"
             )
 
-            if NetworkMgr().request_ip_update(query):
-                logger.info("Update request accepted successfully!")
-            else:
-                logger.info("Update request failed, trying on next loop...")
+            query_response = domain_handler.handle_response(
+                NetworkMgr().request_ip_update(query)
+            )
+
+            match query_response:
+                case "OK":
+                    logger.info("Update request accepted successfully!")
+                case "CONTINUE":
+                    logger.info("Update request failed, trying on next loop...")
+                case "CANCEL":
+                    logger.warning(
+                        "The update request was rejected by the provider. "
+                        "Please verify that your configuration for authentication credentials "
+                        "and domain names is correct. The update process for these domains "
+                        "will be halted to prevent being banned or rate-limited by the provider "
+                        "until the issue is resolved."
+                    )
+                    config_settings["domain_handlers"].remove(domain_handler)
 
 
 def main():

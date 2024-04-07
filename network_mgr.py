@@ -19,6 +19,7 @@ import logger_mgr
 from nslookup import Nslookup
 
 logger = logger_mgr.initialize_logger(__name__)
+headers = {"User-Agent": "JDavid SyncDDNS/Python davidaristi.0504@gmail.com"}
 
 
 class NetworkMgr:
@@ -49,7 +50,7 @@ class NetworkMgr:
 
         for url in getters_url:
             try:
-                request_result = requests.get(url, timeout=5)
+                request_result = requests.get(url, timeout=5, headers=headers)
                 if request_result.status_code == 200:
                     ip_result = self.check_ip_validity(request_result.text.rstrip())
                     if not ip_result:
@@ -103,8 +104,10 @@ class NetworkMgr:
 
     def request_ip_update(self, url_query: str):
         try:
-            response = requests.get(url_query, timeout=5)
-            logger.debug(f"request_ip_update - Code: {response.status_code} - response: {response.text}")
+            response = requests.get(url_query, timeout=5, headers=headers)
+            logger.debug(
+                f"request_ip_update - Code: {response.status_code} - response: {response.text}"
+            )
         except requests.exceptions.RequestException as error:
             response = None
             logger.error(f"request_ip_update - Error while requesting IP update")

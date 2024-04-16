@@ -116,6 +116,7 @@ def run_ip_check_cycle():
                         "until the issue is resolved."
                     )
                     config_settings["domain_handlers"].remove(domain_handler)
+                    break
 
 
 def main():

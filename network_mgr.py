@@ -108,15 +108,14 @@ class NetworkMgr:
             logger.debug(
                 f"request_ip_update - Code: {response.status_code} - response: {response.text}"
             )
+            
+            return {"status_code": response.status_code, "response_text": response.text}
         except requests.exceptions.RequestException as error:
             response = None
             logger.error(f"request_ip_update - Error while requesting IP update")
             logger.debug(f"Error: {error}")
 
-        if response and response.status_code == 200:
-            return response.text
-
-        return ""
+            return {"status_code": 500, "response_text": ""}
 
     def check_ip_validity(self, ip: str) -> str | None:
         """

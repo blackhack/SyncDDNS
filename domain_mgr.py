@@ -59,10 +59,10 @@ class DomainMgr:
             logger.error("Invalid DuckDNS settings!")
             sys.exit(1)
 
-    def handle_duckdns_query_response(self, response: str):
-        if response == "OK":
+    def handle_duckdns_query_response(self, response):
+        if response["response_text"] == "OK":
             return "OK"
-        elif response == "KO":
+        elif response["response_text"] == "KO":
             return "CANCEL"
 
         return "CONTINUE"
@@ -108,13 +108,15 @@ class DomainMgr:
             logger.error("Invalid FreeDNS settings!")
             sys.exit(1)
 
-    def handle_freedns_query_response(self, response: str):
+    def handle_freedns_query_response(self, response):
         invalid_url = re.compile(r"^ERROR: Invalid update URL .*")
         invalid_token_domain = re.compile(r"^ERROR: Unable to locate this record .*")
 
-        if not response:
+        if not response["response_text"]:
             return "CONTINUE"
-        elif invalid_url.match(response) or invalid_token_domain.match(response):
+        elif invalid_url.match(response["response_text"]) or invalid_token_domain.match(
+            response["response_text"]
+        ):
             return "CANCEL"
 
         return "OK"
@@ -168,17 +170,19 @@ class DomainMgr:
             logger.error("Invalid No-IP settings!")
             sys.exit(1)
 
-    def handle_noip_query_response(self, response: str):
+    def handle_noip_query_response(self, response):
         ok_response = re.compile(r"^good .*")
         non_change_response = re.compile(r"^nochg .*")
 
-        if not response:
+        if not response["response_text"]:
             return "CONTINUE"
-        elif ok_response.match(response) or non_change_response.match(response):
+        elif ok_response.match(response["response_text"]) or non_change_response.match(
+            response["response_text"]
+        ):
             return "OK"
 
         return "CANCEL"
-    
+
     def get_noip_update_query(
         self,
         new_ipv4: str = None,
@@ -215,4 +219,3 @@ class DomainMgr:
             return [request_url]
 
         return []
-

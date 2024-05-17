@@ -19,7 +19,7 @@ GENERAL:
     - https://api6.ipify.org/
     
 # List of domains to check and update.
-# Supported providers: DUCKDNS, FREEDNS, NOIP
+# Supported providers: DUCKDNS, FREEDNS, NOIP, CLOUDFLARE
 DOMAIN_INFO:
   - provider: DUCKDNS
     domain_list:
@@ -48,3 +48,20 @@ DOMAIN_INFO:
           password: mypassword
           names:
             - yetanotherdomain.noip.org
+
+  - provider: CLOUDFLARE
+    domain_list:
+      - domain_data:
+          token: BEARER_TOKEN # Need to have this permissions: Zone-Zone-Read and Zone-DNS-Edit and for resources: Include - All Zones
+          zone_id: your_zone_id
+          dns_record_id: dns_record_of_subdomain_A_record # Every dns record have different ID (A, AAAA have different IDs)
+          ip_version: ipv4 # Only one type per dns_record_id
+          names:
+            - subdomain.mydomain.org # Only one domain/subdomain per dns_record_id
+      - domain_data:
+          token: BEARER_TOKEN
+          zone_id: your_zone_id
+          dns_record_id: dns_record_of_subdomain_AAAA_record
+          ip_version: ipv6
+          names:
+            - subdomain.mydomain.org

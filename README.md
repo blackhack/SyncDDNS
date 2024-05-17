@@ -5,6 +5,7 @@ SyncDDNS is a Python script that helps keep your dynamic DNS A (IPv4) and AAAA (
 - [DuckDNS](https://www.duckdns.org)
 - [FreeDNS](https://freedns.afraid.org)
 - [No-IP](https://www.noip.com)
+- [CloudFlare](https://www.cloudflare.com/) - Note: If the proxy is enabled, there is no way to check the origin IP using nslookup, so every update loop will send an update request to Cloudflare, even if the origin IP hasn’t changed.
 
 ## Setting Up the Environment
 
@@ -48,6 +49,7 @@ Tested on Python 3.11
     - `DUCKDNS`
     - `FREEDNS`
     - `NOIP`
+    - `CLOUDFLARE`
 
 - **`token`**: A unique authentication token string provided by the DDNS service. If the DDNS provider issues a token, then the use of username and password is not necessary for authentication.
 
@@ -58,6 +60,10 @@ Tested on Python 3.11
 - **`domain_list`**: A list of domains to be updated.
 
 - **`domain_data`**: The specific data for a domain. An object containing the token, IP version, and names for a particular domain.
+
+- **`zone_id`**: CloudFlare zone_id for the domain.
+
+- **`dns_record_id`**: CloudFlare dns_record_id for the domain/subdomain, different for every dns record (A, AAAA), can be obtained via API Call.
 
 - **`ip_version`**: Specifies the IP version for the domain. This parameter is optional.
   - *Valid Values*:

@@ -12,6 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import json
 import re
 import sys
 
@@ -25,8 +26,15 @@ class DomainMgr:
     def __init__(self, provider, domain_data):
         self.provider = provider
         self.token = domain_data.get("token", None)
+
+        # CloudFlare specific
+        self.zone_id = domain_data.get("zone_id", None)
+        self.dns_record_id = domain_data.get("dns_record_id", None)
+
+        # No-ip specific
         self.username = domain_data.get("username", None)
         self.password = domain_data.get("password", None)
+
         self.update_ipv4 = (
             False if domain_data.get("ip_version", "both") == "ipv6" else True
         )
@@ -48,6 +56,10 @@ class DomainMgr:
                 self.check_noip_config()
                 self.handle_response = self.handle_noip_query_response
                 self.get_update_query = self.get_noip_update_query
+            case "CLOUDFLARE":
+                self.check_cloudflare_config()
+                self.handle_response = self.handle_cloudflare_query_response
+                self.get_update_query = self.get_cloudflare_update_query
             case _:
                 logger.error(f"Invalid provider - {provider}")
                 sys.exit(1)
@@ -97,9 +109,9 @@ class DomainMgr:
             if self.update_ipv6 and new_ipv6:
                 request_url += "&ipv6=" + new_ipv6
 
-            return [request_url]
+            return {"query_urls": [request_url], "request_method": "GET"}
 
-        return []
+        return {}
 
     #### FreeDNS ####
 
@@ -159,9 +171,9 @@ class DomainMgr:
                     + new_ipv6
                 )
 
-            return request_urls
+            return {"query_urls": [request_urls], "request_method": "GET"}
 
-        return []
+        return {}
 
     #### No-IP ####
 
@@ -216,6 +228,64 @@ class DomainMgr:
             # Join the IP addresses with a comma only if both are present
             request_url += ",".join(ip_addresses)
 
-            return [request_url]
+            return {"query_urls": [request_url], "request_method": "GET"}
 
-        return []
+        return {}
+
+    #### CloudFlare ####
+
+    def check_cloudflare_config(self):
+        if not self.token or not self.zone_id or not self.dns_record_id or not self.domains:
+            logger.error("Invalid CloudFlare settings!")
+            sys.exit(1)
+
+    def handle_cloudflare_query_response(self, response):
+        if not response["response_text"]:
+            return "CONTINUE"
+        else:
+            response_dict = json.loads(response["response_text"])
+            if response_dict.get("success", False):
+                return "OK"
+
+        return "CANCEL"
+
+    def get_cloudflare_update_query(
+        self,
+        new_ipv4: str = None,
+        new_ipv6: str = None,
+    ):
+        # Check if any domain need to be update, both ipv4 and ipv6 if available
+        need_update = False
+        if self.update_ipv4 and new_ipv4:
+            need_update = any(
+                NetworkMgr().get_current_dns_IPs(domain) != new_ipv4
+                for domain in self.domains
+            )
+        if not need_update and self.update_ipv6 and new_ipv6:
+            need_update = any(
+                NetworkMgr().get_current_dns_IPs(domain, ipv6=True) != new_ipv6
+                for domain in self.domains
+            )
+
+        if need_update:
+            request_url = f"https://api.cloudflare.com/client/v4/zones/{self.zone_id}/dns_records/{self.dns_record_id}"
+
+            headers = {
+                'Authorization': f'Bearer {self.token}',
+                "Content-Type": "application/json",
+            }
+
+            data = {
+                "type": "AAAA" if self.update_ipv6 else "A",
+                "name": self.domains[0],
+                "content": new_ipv6 if self.update_ipv6 else new_ipv4,
+            }
+
+            return {
+                "query_urls": [request_url],
+                "request_method": "PATCH",
+                "query_headers": headers,
+                "query_data": data,
+            }
+
+        return {}

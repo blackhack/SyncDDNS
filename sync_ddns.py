@@ -90,7 +90,7 @@ def run_ip_check_cycle():
         if not request_queries:
             logger.info("... No updates were performed.")
 
-        for query in request_queries:
+        for query in request_queries.get("query_urls", []):
             logger.info(
                 f"... An update will be performed with the following URL query:"
             )
@@ -98,8 +98,12 @@ def run_ip_check_cycle():
                 f"...... {'HIDE' if config_settings['hide_update_queries_on_logs'] else query}"
             )
 
+            method = request_queries.get("request_method", None)
+            headers = request_queries.get("query_headers", None)
+            data = request_queries.get("query_data", None)
+
             query_response = domain_handler.handle_response(
-                NetworkMgr().request_ip_update(query)
+                NetworkMgr().request_ip_update(query, method, headers, data)
             )
 
             match query_response:

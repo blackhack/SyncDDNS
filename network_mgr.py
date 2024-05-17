@@ -19,7 +19,7 @@ import logger_mgr
 from nslookup import Nslookup
 
 logger = logger_mgr.initialize_logger(__name__)
-headers = {"User-Agent": "JDavid SyncDDNS/Python davidaristi.0504@gmail.com"}
+user_agent = {"User-Agent": "JDavid SyncDDNS/Python davidaristi.0504@gmail.com"}
 
 
 class NetworkMgr:
@@ -50,7 +50,7 @@ class NetworkMgr:
 
         for url in getters_url:
             try:
-                request_result = requests.get(url, timeout=5, headers=headers)
+                request_result = requests.get(url, timeout=5, headers=user_agent)
                 if request_result.status_code == 200:
                     ip_result = self.check_ip_validity(request_result.text.rstrip())
                     if not ip_result:
@@ -102,9 +102,22 @@ class NetworkMgr:
 
         return ip_result
 
-    def request_ip_update(self, url_query: str):
+    def request_ip_update(self, query_url: str, request_method: str, query_headers: dict, query_data: dict):
         try:
-            response = requests.get(url_query, timeout=5, headers=headers)
+            headers = user_agent
+            if query_headers:
+                headers.update(query_headers)
+
+            response = None
+
+            if request_method == "PATCH":
+                response = requests.patch(query_url, timeout=5, headers=headers, json=query_data)
+            else:
+                response = requests.get(query_url, timeout=5, headers=headers)  
+
+            logger.debug(
+                f"request_ip_update - Request: {query_url, headers, query_data}"
+            )
             logger.debug(
                 f"request_ip_update - Code: {response.status_code} - response: {response.text}"
             )

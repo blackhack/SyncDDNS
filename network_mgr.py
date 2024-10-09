@@ -92,11 +92,11 @@ class NetworkMgr:
             )
 
             if not ip_result:
-                logger.warning(f"Obtained no A record for domain: {domain}")
+                logger.warning(f"Obtained no {'A' if not ipv6 else 'AAAA'} record for domain: {domain}")
         except Exception as error:
             ip_result = None
             logger.error(
-                f"An error occurred while requesting domain A record: {domain}"
+                f"An error occurred while requesting domain {'A' if not ipv6 else 'AAAA'} record: {domain}"
             )
             logger.debug(f"Error: {error}")
 

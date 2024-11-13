@@ -1,6 +1,7 @@
 GENERAL:
   update_delay: 300 # Seconds between checks, remember to respect the server's rate limit.
   hide_update_queries_on_logs: False
+  continue_on_provider_fail: False # This force a domain to keep trying update even if the provider rejected us before, NOT RECOMMENDED
   log_level: INFO
   dns_servers:
     - 1.1.1.1

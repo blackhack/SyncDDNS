@@ -44,6 +44,7 @@ def load_config():
 
     update_delay = config["GENERAL"]["update_delay"]
     hide_update_queries_on_logs = config["GENERAL"]["hide_update_queries_on_logs"]
+    continue_on_provider_fail = config["GENERAL"]["continue_on_provider_fail"]
     logger_mgr.set_log_level(config["GENERAL"]["log_level"])
     dns_servers = config["GENERAL"]["dns_servers"]
     ipv4_servers = config["GENERAL"]["ipv4_servers"]
@@ -65,6 +66,7 @@ def load_config():
     config_settings = {
         "update_delay": update_delay,
         "hide_update_queries_on_logs": hide_update_queries_on_logs,
+        "continue_on_provider_fail": continue_on_provider_fail,
         "dns_servers": dns_servers,
         "ipv4_servers": ipv4_servers,
         "ipv6_servers": ipv6_servers,
@@ -112,15 +114,21 @@ def run_ip_check_cycle():
                 case "CONTINUE":
                     logger.info("Update request failed, trying on next loop...")
                 case "CANCEL":
-                    logger.warning(
-                        "The update request was rejected by the provider. "
-                        "Please verify that your configuration for authentication credentials "
-                        "and domain names is correct. The update process for these domains "
-                        "will be halted to prevent being banned or rate-limited by the provider "
-                        "until the issue is resolved."
-                    )
-                    config_settings["domain_handlers"].remove(domain_handler)
+                    if config_settings["continue_on_provider_fail"]:
+                        logger.warning(
+                            "Update request rejected by provider. Check your authentication credentials and domain names. "
+                            "Due to 'continue_on_provider_fail', the domain will attempt updates in the next loop. "
+                            "If not fixed, this can trigger a ban or rate-limit."
+                        )
+                    else:
+                        logger.error(
+                            "Update request rejected by provider. Check your authentication credentials and domain names. "
+                            "The update process for these domains is halted to prevent bans or rate-limits."
+                        )
+                        config_settings["domain_handlers"].remove(domain_handler)
                     break
+
+
 
 
 def main():

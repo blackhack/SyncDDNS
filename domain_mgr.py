@@ -240,12 +240,16 @@ class DomainMgr:
             sys.exit(1)
 
     def handle_cloudflare_query_response(self, response):
-        if response["response_text"] is None or not response["response_text"]:
+        response_text = response.get("response_text")
+        if not response_text or not isinstance(response_text, str):
             return "CONTINUE"
-        else:
-            response_dict = json.loads(response["response_text"])
+
+        try:
+            response_dict = json.loads(response_text)
             if response_dict.get("success", False):
                 return "OK"
+        except json.JSONDecodeError:
+            return "CONTINUE"
 
         return "CANCEL"
 
